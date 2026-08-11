@@ -1,5 +1,10 @@
 # reana-client CLI API
 
+For REANA 0.9, authenticate with `REANA_ACCESS_TOKEN` as shown in the
+[first-example guide](../../getting-started/first-example/). The
+[REANA 0.95 authentication commands](#authentication-in-reana-095) are
+described separately below.
+
 The complete `reana-client` CLI API reference guide is available here:
 
 - [https://reana-client.readthedocs.io/en/latest/#cli-api](https://reana-client.readthedocs.io/en/latest/#cli-api)
@@ -232,6 +237,14 @@ workspace.
 Note that workflow restarting can be used in a combination with operational
 options ``FROM`` and ``TARGET``. You can also pass a modified workflow
 specification with ``-f`` or ``--file`` flag.
+
+The ``-f``/``--file`` flag replaces only the *specification* (input
+parameters, operational options, and workflow type/definition metadata).
+The workflow **source files** (Snakefiles, CWL files, rules, ...) are reused
+from the existing workspace: a restart does not re-upload them. If the
+replacement specification references new or changed workflow source, upload
+those files to the workspace first; otherwise validation fails naming the
+missing file.
 
 You can furthermore use modified input prameters using ``-p`` or
 ``--parameters`` flag and by setting additional operational options using
@@ -544,3 +557,35 @@ Example:
     $ reana-client test -w myanalysis -n test_analysis.feature
     $ reana-client test -w myanalysis
     $ reana-client test -w myanalysis -n test1.feature -n test2.feature
+
+## Authentication in REANA 0.95
+
+As of REANA 0.95 release series, use `reana-client login` instead of exporting
+`REANA_ACCESS_TOKEN` for authentication. These commands require matching
+OIDC-enabled server and client versions. Unset an existing
+`REANA_ACCESS_TOKEN` before login so it does not override the saved
+credentials. For REANA 0.9, continue to use the access token from your REANA
+profile as shown in the [first-example guide](../../getting-started/first-example/).
+
+### login
+
+Authenticate against REANA server using OIDC.
+
+By default the browser-based loopback flow (authorization code with PKCE)
+is used. On headless machines pass ``--headless`` to use the device flow.
+
+TLS certificate verification is enabled by default. For local deployments,
+set ``REANA_SERVER_CA_CERTS`` to a trusted CA bundle (PEM) for both REANA and
+the identity provider. This takes precedence over ``REANA_SERVER_TLS_VERIFY``.
+
+``REANA_SERVER_TLS_VERIFY`` accepts ``1``/``true``/``yes``/``on`` to enable
+verification and ``0``/``false``/``no``/``off`` to disable it for requests to
+the REANA server's HTTPS hostname and port (local testing). This includes
+bundled Keycloak endpoints under ``/keycloak``. Identity providers on other
+hostnames or ports are always verified. Values are case-insensitive and
+ignore surrounding whitespace. Unset or empty values enable verification;
+other values are errors.
+
+### logout
+
+Logout from the active REANA server.

@@ -1,5 +1,10 @@
 # Upgrading database
 
+As of REANA 0.95 release series, the OIDC authentication migration removes
+legacy REANA access tokens. The [OIDC upgrade precautions](#before-the-oidc-upgrade)
+and Helm maintenance-recovery guidance below apply to OIDC-enabled 0.95
+releases and development builds.
+
 If you are the REANA cluster administrator upgrading an existing REANA
 cluster deployment from one REANA release series to another, such as
 from 0.7.* to 0.8.0, there might be changes in the REANA database schema
@@ -9,11 +14,68 @@ database upgrade script using [`alembic`](https://alembic.sqlalchemy.org/en/late
 The `reana-db` command-line tool is provided to ease the database
 upgrade tasks. The tool is included in the `REANA-Server` component.
 
+On an installation with a large number of user accounts, some migrations
+briefly hold an exclusive lock on the `user_` table while building new
+constraints, blocking authenticated requests for the build's duration --
+see the per-migration notes in `reana-db`'s `alembic/versions/` for which
+ones and why. Consider a maintenance window: run the upgrade below
+*before* setting the chart's `maintenance.enabled` value to `true`, since
+that scales the server itself (and, with the bundled database, the
+database too) to zero replicas and leaves nothing for `kubectl exec` to
+reach. If you are already in maintenance mode, the exact recovery
+procedure (temporarily restoring dependencies without exposing the API to
+real traffic, then running the upgrade, then reverting) is printed in
+full by `helm upgrade`'s own installation notes -- re-display them at any
+time with `helm get notes <release-name>` without needing to run
+`helm upgrade` again.
+
 Two different procedures will be explained. The first, covers a quick
 database upgrade after a successful cluster upgrade. The second, covers
 a more detailed upgrade procedure, in case you want to have a better
 control or you need to troubleshoot some unexpected issues during the
 upgrade.
+
+## Before the OIDC upgrade
+
+Before upgrading to OIDC authentication, including from an earlier 0.95
+alpha deployment, back up the database. The migration permanently deletes
+legacy REANA access tokens. Returning to the legacy token schema requires
+restoring a pre-upgrade backup and using the corresponding older REANA
+components; `alembic downgrade` cannot recover the deleted tokens.
+
+For bundled PostgreSQL, run the following while the database pod is running,
+before upgrading the chart or applying migrations. Adjust the namespace and
+deployment name for your installation:
+
+```{ .console .copy-to-clipboard }
+$ (
+    umask 077
+    set -C
+    kubectl -n default exec deployment/reana-db -c db -- \
+        sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump --username="$POSTGRES_USER" --format=custom "$POSTGRES_DB"' \
+        > reana-before-oidc.dump
+  )
+```
+
+The archive is written on your own machine with permissions restricted to
+your user. The command refuses to overwrite an existing file; choose a new
+filename for another backup. Confirm that the command succeeds and test
+restoring the archive to a separate database with
+[`pg_restore`](https://www.postgresql.org/docs/12/app-pgrestore.html) before
+proceeding. For an external database, use its administrator's backup and
+restore procedure instead.
+
+This dump covers only the REANA database. Back up Kubernetes Secrets,
+workflow files and any separate Keycloak database through their own backup
+procedures as well.
+
+Configure `secrets.reana.REANA_SECRET_KEY` in your private Helm values; the
+server will not start without it. **Preserve the exact existing key during
+an upgrade.** It protects application sessions and encrypted database
+values, so replacing it requires a separate key-rotation procedure. Retain
+the matching key securely for recovery: a database dump does not include
+the Kubernetes Secret that holds it. Generate a strong random key once for
+a new installation, not for each upgrade.
 
 ## Quick upgrade procedure
 
@@ -89,6 +151,10 @@ revert to the previous state. To do this, you need to specify the exact
 hash of the revision you want to downgrade to. The following example
 shows a command to downgrade the database schema to the previous
 revision:
+
+This example applies only to reversible migrations. For the
+[OIDC token-removal migration](#before-the-oidc-upgrade), restore the
+pre-upgrade backup instead.
 
 ```console
 $ kubectl exec -i -t deployment/reana-server -c rest-api -- reana-db alembic downgrade 4801b98f6408

@@ -13,3 +13,12 @@ jupyter      1            2021-12-01T14:33:26   jupyter        https://reana.cer
 The command output will list all active sessions, the workflow names for
 which the sessions were opened, as well as the session URI that you can
 open in your browser to connect to the session.
+
+Treat the complete URI as confidential.
+
+!!! note "REANA 0.95"
+    As of REANA 0.95 release series, the `token` in a notebook URL is a
+    secret unique to that interactive session, valid while it remains open.
+    It replaces the REANA user access token shown in the 0.9 examples and
+    is not your OIDC access token. Use the complete URL returned by your
+    client for either release series.

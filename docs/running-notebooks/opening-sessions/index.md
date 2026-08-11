@@ -18,6 +18,15 @@ By clicking on the link you will have access to a Jupyter notebook interface:
 
 ![jupyter-notebook](../../images/interactive-session-jupyter-notebook.png){.screenshot-browser-mockup}
 
+Treat the complete URL as confidential and do not share it.
+
+!!! note "REANA 0.95"
+    As of REANA 0.95 release series, the `token` in a notebook URL is a
+    secret unique to that interactive session, valid while it remains open.
+    It replaces the REANA user access token shown in the 0.9 examples and
+    is not your OIDC access token. Use the complete URL returned by your
+    client for either release series.
+
 By default, newly opened sessions will use the
 [`quay.io/jupyter/scipy-notebook:notebook-7.2.2`](https://quay.io/repository/jupyter/scipy-notebook)
 Docker image to spawn your notebook.

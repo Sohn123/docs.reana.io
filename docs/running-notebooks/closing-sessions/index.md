@@ -20,6 +20,13 @@ You would typically use this command after you finished exploring data
 in the Jupyter notebook and after you have transferred any code created
 in your interactive session.
 
+!!! note "REANA 0.95"
+    As of REANA 0.95 release series, the `token` in a notebook URL is a
+    secret unique to that interactive session, valid while it remains open.
+    It replaces the REANA user access token shown in the 0.9 examples and
+    is not your OIDC access token. Use the complete URL returned by your
+    client for either release series.
+
 ### Close from web interface
 
 When a workflow has an associated Jupyter notebook session opened, a

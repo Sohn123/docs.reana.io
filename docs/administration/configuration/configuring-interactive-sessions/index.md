@@ -31,10 +31,12 @@ interactive_sessions:
 !!! tip
     Note that as an administrator you can also force the manual closure of opened interactive sessions
     regardless of the value of `interactive_sessions.maximum_inactivity_period` by means of the `reana-admin` tool.
+    As of REANA 0.95 release series, run this command directly in the server
+    pod without the legacy `--admin-access-token` option.
     For example, to close any interactive session that has been inactive since 30 days, you would run:
 
     ```console
-    $ kubectl exec -i -t deployment/reana-server -- flask reana-admin interactive-session-cleanup --days 30 --admin-access-token $REANA_ACCESS_TOKEN
+    $ kubectl exec -i -t deployment/reana-server -- flask reana-admin interactive-session-cleanup --days 30
     Interactive session 'reana-run-session-69d590c3-ce47-4ae1-8719-bf8952627b37-c7djf67l' has been closed.
     Interactive session 'reana-run-session-69d590c3-ce47-4ae1-8719-bf8952627b37-c7djf67l' was updated 2 days ago. Leaving opened.
     ```
