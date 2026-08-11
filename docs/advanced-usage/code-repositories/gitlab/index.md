@@ -16,6 +16,15 @@ Once this is done, you will see that now all your GitLab projects are listed, ju
 
 ![gitlab-integration-project-list](../../../images/ui-your-profile-gitlab-integration-project-list.png)
 
+GitLab webhook authorization is time-limited. Your profile shows its expiry and
+lets you renew it while you are signed in to REANA. Renewal checks your current
+REANA entitlement and keeps the secret already configured in your GitLab
+projects, so you do not need to recreate their webhooks. After authorization
+expires, GitLab cannot start new workflows until you renew it. The cluster
+administrator chooses the maximum lifetime: a longer lifetime requires less
+frequent renewal, but also allows webhook access to continue longer after a
+user's REANA role is revoked at the identity provider.
+
 Now you are ready to make a commit to your analysis master branch, in this case we will just double the number of events.
 
 ![gitlab-integration-trigger-workflow-run](../../../images/ui-gitlab-trigger-workflow-run.png)
